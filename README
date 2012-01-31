@@ -1,0 +1,22 @@
+= Matrix Functionality =
+
+This archive contains the validation service that needs to be run on a third party machine (we call this the 'matrix').
+
+This works by scanning all the Ubuntu One shares from .trophy files that have not been signed. It then adds these to
+a queue.
+
+We then process the queue one by one to validate the .trophy files, and if they validate, add a .trophy.sig file.
+
+== Setting Up ==
+
+Create a directory somewhere called "queue".
+
+Create a .matrix file (an example is included, just rename it and edit) and specify where your Ubuntu One
+'Shared With Me' directory is and where the 'queue' directory is.
+
+== Updating The Queue =
+
+To update the queue, run brit.py:
+
+	python brit.py
+
