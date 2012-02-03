@@ -2,8 +2,8 @@ import os
 import ConfigParser
 from optparse import OptionParser
 
-SHARESDIR = None
-QUEUEDIR = None
+SHARESPATH = None
+QUEUEPATH = None
 
 all = []
 signed = []
@@ -15,15 +15,20 @@ class Brit(object):
         config = ConfigParser.ConfigParser()
         config.read(config_path + ".matrix")
 
-        SHARESDIR = config.get("matrix", "sharesdir")
-        QUEUEDIR = config.get("matrix", "queuedir")
+        SHARESPATH = config.get("matrix", "sharespath")
+        QUEUEPATH = config.get("matrix", "queuepath")
 
-        for r,d,f in os.walk(SHARESDIR):
+        for r,d,f in os.walk(SHARESPATH):
             for i in f:
                 if i.endswith(".trophy.sig"):
                     res = os.path.join(r,i)
                     signed.append(res[:-4])
-                all.append(os.path.join(r,i))
+            for i in f:
+                if i.endswith(".trophy"):
+                    res = os.path.join(r,i)
+                    all.append(res)
+
+        print all
 
         for i in all:
             if i.endswith(".sig"):
@@ -35,8 +40,8 @@ class Brit(object):
 
         # clear out links from queue
 
-        for the_file in os.listdir(QUEUEDIR + "/"):
-            file_path = os.path.join(QUEUEDIR + "/", the_file)
+        for the_file in os.listdir(QUEUEPATH + "/"):
+            file_path = os.path.join(QUEUEPATH + "/", the_file)
             try:
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
@@ -51,7 +56,7 @@ class Brit(object):
 
         for t in final:
             print "Adding: " + t
-            os.symlink(t, QUEUEDIR + "/" + str(i))
+            os.symlink(t, QUEUEPATH + "/" + str(i))
             i = i + 1
 
 if __name__ == "__main__":

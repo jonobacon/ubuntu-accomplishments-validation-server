@@ -14,9 +14,20 @@ Create a directory somewhere called "queue".
 Create a .matrix file (an example is included, just rename it and edit) and specify where your Ubuntu One
 'Shared With Me' directory is and where the 'queue' directory is.
 
+Now add 'libaccomplishment' in the dir to your PYTHONPATH:
+
+	export PYTHONPATH=$PYTHONPATH:/home/foo/validation-service/libaccomplishment
+
 == Updating The Queue =
 
 To update the queue, run brit.py:
 
 	python brit.py
 
+This will keep looping as it processes accomplishments.
+
+== Run The Worker ==
+
+Now run the following from the validation-directory and pass it the queue directory:
+
+	./worker.sh /home/foo/queue/
