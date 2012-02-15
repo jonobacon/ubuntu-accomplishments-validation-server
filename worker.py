@@ -22,8 +22,6 @@ class Worker(object):
         files = os.listdir(self.queue_path)
 
         self.symlink = files[0]
-        print "sym:"
-        print self.symlink
 
         # this grabs the real path; remember it is a symlink
         self.item_path = os.path.realpath(self.queue_path + "/" + files[0])
@@ -49,14 +47,14 @@ class Worker(object):
         print "...validating: " + script
         exitcode = subprocess.call(script)
         if exitcode == 0:
-            print "...SUCCESS"
+            print "...SUCCESS (0)"
             self.sign_trophy()
             self.remove_symlink()
         elif exitcode == 1:
-            print "failed"
+            print "...FAILED (1)"
             self.remove_symlink()
         elif exitcode == 2:
-            print "error"
+            print "...ERROR (2)"
             self.remove_symlink()
         else:
             print "shouldn't happen"
@@ -68,7 +66,7 @@ class Worker(object):
     def sign_trophy(self):
         print "...signing the trophy!"
         shutil.copy (self.item_path, self.item_path + ".sig")
-        print "...done!"
+        print "...signed!"
         
     def remove_symlink(self):
         print "...removing symlink: " + self.symlink

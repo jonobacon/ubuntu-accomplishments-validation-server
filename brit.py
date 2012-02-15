@@ -28,8 +28,6 @@ class Brit(object):
                     res = os.path.join(r,i)
                     all.append(res)
 
-        print all
-
         for i in all:
             if i.endswith(".sig"):
                 pass
