@@ -3,6 +3,7 @@ import sys, os, subprocess
 import ConfigParser
 from optparse import OptionParser
 import shutil
+import subprocess
 
 class Worker(object):
     def __init__(self, config_path):
@@ -65,7 +66,19 @@ class Worker(object):
 
     def sign_trophy(self):
         print "...signing the trophy!"
-        shutil.copy (self.item_path, self.item_path + ".sig")
+
+	command = []
+	command.append("gpg")
+	command.append("--yes")
+	command.append("--output")
+	command.append(self.item_path + ".asc")
+	command.append("--clearsign")
+	command.append(self.item_path)
+	print command
+
+	print output
+        #shutil.copy (self.item_path, self.item_path + ".sig")
+	subprocess.Popen(command)
         print "...signed!"
         
     def remove_symlink(self):

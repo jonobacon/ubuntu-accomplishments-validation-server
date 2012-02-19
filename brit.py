@@ -20,7 +20,7 @@ class Brit(object):
 
         for r,d,f in os.walk(SHARESPATH):
             for i in f:
-                if i.endswith(".trophy.sig"):
+                if i.endswith(".trophy.asc"):
                     res = os.path.join(r,i)
                     signed.append(res[:-4])
             for i in f:
@@ -29,7 +29,7 @@ class Brit(object):
                     all.append(res)
 
         for i in all:
-            if i.endswith(".sig"):
+            if i.endswith(".asc"):
                 pass
             else:
                 matches.append(i)
