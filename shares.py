@@ -14,26 +14,25 @@ class ShareAccept():
 		print "init"
 		self.sd = SyncDaemonTool()
 
-		self.scan_shares()
+		self.detect_shares()
 
 	@defer.inlineCallbacks
-	def scan_shares(self):
+	def detect_shares(self):
 		print "Scanning for shares to accept..."
+		foo = yield self.sd.wait_for_signals(signal_ok="NewShare")
+		print "woo"
 		self.sd.refresh_shares()
 		l = yield self.sd.get_shares()
 		for s in l:
 			if s["accepted"] == "":
 				print "...found: " + str(s["name"]) + " (" + str(s["volume_id"]) + ")"
-				self.accept_share(s["volume_id"])
-
-        @defer.inlineCallbacks
-        def accept_share(self, volume_id):
-		print volume_id
-		print "...accepting share: " + volume_id
-		res = yield self.sd.accept_share(volume_id)
-		print "...subscribing to share: " + volume_id
-		sub = yield self.sd.subscribe_share(volume_id)
-		sys.exit(0)
+				volume_id = str(s["volume_id"])
+				print "...accepting share: " + volume_id
+				res = yield self.sd.accept_share(volume_id)
+				print "...subscribing to share: " + volume_id
+				sub = yield self.sd.subscribe_share(volume_id)
+				print "...done!"
+		reactor.stop()		
 
 if __name__ == '__main__':
 	s = ShareAccept()

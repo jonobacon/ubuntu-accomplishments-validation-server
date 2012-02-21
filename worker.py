@@ -76,7 +76,6 @@ class Worker(object):
 	command.append(self.item_path)
 	print command
 
-	print output
         #shutil.copy (self.item_path, self.item_path + ".sig")
 	subprocess.Popen(command)
         print "...signed!"
