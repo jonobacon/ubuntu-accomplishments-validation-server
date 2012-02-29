@@ -18,8 +18,6 @@ class ShareAccept():
 
 	@defer.inlineCallbacks
 	def detect_shares(self):
-		print "Scanning for shares to accept..."
-		foo = yield self.sd.wait_for_signals(signal_ok="NewShare")
 		self.sd.refresh_shares()
 		l = yield self.sd.get_shares()
 		for s in l:
