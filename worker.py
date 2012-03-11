@@ -34,14 +34,32 @@ class Worker(object):
         itemconfig = ConfigParser.ConfigParser()
         itemconfig.read(self.item_path)
 
-        item_app = itemconfig.get("trophy", "application")
-        item_accom = itemconfig.get("trophy", "accomplishment")
-
+        try:
+            item_app = itemconfig.get("trophy", "application")
+            print "found app"
+        except ConfigParser.NoSectionError, err:
+            self.delete_trophy()
+        
+        try:    
+            item_accom = itemconfig.get("trophy", "accomplishment")
+            print "found accom"
+        except ConfigParser.NoSectionError, err:
+            self.delete_trophy()
+            
         script = self.accom_path + "/scripts/" + item_app + "/" + item_accom + ".py"
-        print "...running: " + script
+        print script
+        if os.path.exists(script):
+            print "...running: " + script
+            self.run_script(script)
+        else:
+            self.delete_trophy()
+            
+        sys.exit(0)
 
-        self.run_script(script)
-
+    def delete_trophy(self):
+        print "...invalid file, removing: " + self.item_path
+        os.remove(self.item_path)
+        self.remove_symlink()
         sys.exit(0)
         
     def run_script(self, script):
