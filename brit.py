@@ -45,7 +45,7 @@ class Brit(object):
                     os.unlink(file_path)
             except Exception, e:
                 print e
-
+        
         # create the symbol links
 
         i = 1
@@ -54,7 +54,7 @@ class Brit(object):
 
         for t in final:
             print "Adding: " + t
-            os.symlink(t, QUEUEPATH + "/" + str(i))
+            os.symlink(t, os.path.join(QUEUEPATH, str(t.replace("/", "-"))))
             i = i + 1
 
 if __name__ == "__main__":
