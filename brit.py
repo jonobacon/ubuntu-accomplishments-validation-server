@@ -36,26 +36,36 @@ class Brit(object):
 
         final = list(set(matches) - set(signed))
 
+        print final
         # clear out links from queue
 
-        for the_file in os.listdir(QUEUEPATH + "/"):
-            file_path = os.path.join(QUEUEPATH + "/", the_file)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception, e:
-                print e
+        #for the_file in os.listdir(QUEUEPATH + "/"):
+        #    file_path = os.path.join(QUEUEPATH + "/", the_file)
+        #    try:
+        #        if os.path.isfile(file_path):
+        #            os.unlink(file_path)
+        #    except Exception, e:
+        #        print e
         
         # create the symbol links
 
-        i = 1
+        #i = 1
 
         # populating the queue
 
         for t in final:
-            print "Adding: " + t
-            os.symlink(t, os.path.join(QUEUEPATH, str(t.replace("/", "-"))))
-            i = i + 1
+            symname = None
+            stripslash = str(t.replace("/", ""))
+            stripspace = str(stripslash.replace(" ", ""))
+            striplb = str(stripspace.replace("(", ""))
+            striprb = str(striplb.replace(")", ""))
+            finalsym = str(striprb.replace(".", ""))
+            symname = os.path.join(QUEUEPATH, finalsym)
+            print symname
+            if not os.path.exists(symname):
+                print "Adding: " + t
+                os.symlink(t, symname)
+            #i = i + 1
 
 if __name__ == "__main__":
     parser = OptionParser()

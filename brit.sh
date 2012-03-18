@@ -1,5 +1,5 @@
 #!/bin/bash
 while true; do
-  python brit.py
+  python /home/jono/validation-service/brit.py
   sleep 5
 done

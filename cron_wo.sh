@@ -1,6 +1,6 @@
 #!/bin/sh
-if ps -ef | grep -v grep | grep worker.sh ; then
+if ps -ef | grep -v grep | grep workerbatch.py ; then
 	exit 0
 else
-	/home/jono/validation-service/worker.sh >> /home/jono/logs/worker.log &
+	python /home/jono/validation-service/workerbatch.py &
 fi
