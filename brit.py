@@ -36,7 +36,7 @@ class Brit(object):
 
         final = list(set(matches) - set(signed))
 
-        print final
+        #print final
         # clear out links from queue
 
         #for the_file in os.listdir(QUEUEPATH + "/"):
@@ -61,7 +61,7 @@ class Brit(object):
             striprb = str(striplb.replace(")", ""))
             finalsym = str(striprb.replace(".", ""))
             symname = os.path.join(QUEUEPATH, finalsym)
-            print symname
+            #print symname
             if not os.path.exists(symname):
                 print "Adding: " + t
                 os.symlink(t, symname)
