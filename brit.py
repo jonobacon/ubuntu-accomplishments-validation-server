@@ -18,6 +18,7 @@ class Brit(object):
         SHARESPATH = config.get("matrix", "sharespath")
         QUEUEPATH = config.get("matrix", "queuepath")
 
+        self.remove_broken_symlinks()
         for r,d,f in os.walk(SHARESPATH):
             for i in f:
                 if i.endswith(".trophy.asc"):
@@ -66,6 +67,33 @@ class Brit(object):
                 print "Adding: " + t
                 os.symlink(t, symname)
             #i = i + 1
+
+    def remove_broken_symlinks(self):
+        links = []
+        broken = []
+        for root, dirs, files in os.walk('/home/jono/queue'):
+            for filename in files:
+                path = os.path.join(root,filename)
+                if os.path.islink(path):
+                    target_path = os.readlink(path)
+                    # Resolve relative symlinks
+                    if not os.path.isabs(target_path):
+                        target_path = os.path.join(os.path.dirname(path),target_path)
+                    if not os.path.exists(target_path):
+                        links.append(path)
+                        broken.append(path)
+                    else:
+                        links.append(path)
+                else:
+                    # If it's not a symlink we're not interested.
+                    continue
+        if broken == []:
+            break
+        else:
+            for link in broken:
+                # delete broken symlinks
+                os.unlink(link)
+            
 
 if __name__ == "__main__":
     parser = OptionParser()
