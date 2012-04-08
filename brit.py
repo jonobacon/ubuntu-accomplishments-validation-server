@@ -2,9 +2,6 @@ import os
 import ConfigParser
 from optparse import OptionParser
 
-SHARESPATH = None
-QUEUEPATH = None
-
 all = []
 signed = []
 matches = []
@@ -15,11 +12,10 @@ class Brit(object):
         config = ConfigParser.ConfigParser()
         config.read(config_path + ".matrix")
 
-        SHARESPATH = config.get("matrix", "sharespath")
-        QUEUEPATH = config.get("matrix", "queuepath")
+        self.SHARESPATH = config.get("matrix", "sharespath")
+        self.QUEUEPATH = config.get("matrix", "queuepath")
 
-        self.remove_broken_symlinks()
-        for r,d,f in os.walk(SHARESPATH):
+        for r,d,f in os.walk(self.SHARESPATH):
             for i in f:
                 if i.endswith(".trophy.asc"):
                     res = os.path.join(r,i)
@@ -61,17 +57,19 @@ class Brit(object):
             striplb = str(stripspace.replace("(", ""))
             striprb = str(striplb.replace(")", ""))
             finalsym = str(striprb.replace(".", ""))
-            symname = os.path.join(QUEUEPATH, finalsym)
+            symname = os.path.join(self.QUEUEPATH, finalsym)
             #print symname
             if not os.path.exists(symname):
                 print "Adding: " + t
                 os.symlink(t, symname)
             #i = i + 1
 
+        self.remove_broken_symlinks()
+    
     def remove_broken_symlinks(self):
         links = []
         broken = []
-        for root, dirs, files in os.walk('/home/jono/queue'):
+        for root, dirs, files in os.walk(self.QUEUEPATH):
             for filename in files:
                 path = os.path.join(root,filename)
                 if os.path.islink(path):
@@ -88,7 +86,7 @@ class Brit(object):
                     # If it's not a symlink we're not interested.
                     continue
         if broken == []:
-            break
+            pass
         else:
             for link in broken:
                 # delete broken symlinks
