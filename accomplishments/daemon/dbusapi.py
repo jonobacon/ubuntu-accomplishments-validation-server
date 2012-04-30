@@ -4,7 +4,7 @@ class Accomplishments():
     def __init__(self):
         print "getting auth data"
 
-    def getExtraInformation(self, app, info):
+    def get_extra_information(self, app, info):
         trophypath = os.environ['ACCOMTROPHYPATH']
 
         a = os.path.split(trophypath)
@@ -18,6 +18,5 @@ class Accomplishments():
         data = f.read()
 
         final = [{info : data.rstrip('\n')}]
-        print 
 
         return final
