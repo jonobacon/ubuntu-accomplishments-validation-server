@@ -88,8 +88,8 @@ with open(output_configparser, 'wb') as configfile:
 
 # -------- generate CSV ---------------
 
-text_header = "Date,Alltime Total Users,Alltime Total Trophies,Today Usernames,Today Total Users,Today New Users,Today Total Trophies,Today New Trophies"
-text_today = str("\n") + today + "," + str(len(final_total_users)) + "," + str(total_trophycount) + "," + str(today_usernames).rstrip(" ") + "," + str(total_usercount) + "," + str(today_users) + "," + str(total_trophycount) + "," + str(todaystrophies)
+text_header = "Date,Alltime Total Users,Alltime Total Trophies,Today Usernames,Today Total Users,Today New Users,Today Total Trophies,Today New Trophies\n"
+text_today = today + "," + str(len(final_total_users)) + "," + str(total_trophycount) + "," + str(today_usernames).rstrip(" ") + "," + str(total_usercount) + "," + str(today_users) + "," + str(total_trophycount) + "," + str(todaystrophies) + "\n"
 
 lines = []
 
@@ -99,7 +99,23 @@ if not os.path.exists(output_csv):
         myfile.write(text_today)
         myfile.close()
 else:
-    with open(output_csv, "a") as myfile:
-        myfile.write(text_today)
-        myfile.close()
-    
+    with file(output_csv, "r") as myfile:
+        lines = myfile.readlines()
+        last_line = lines[-1]
+        
+        if str(last_line.split(",")[0]) == str(now.date()):
+            print "foo"
+            lines = lines[:-1]
+            lines.append(text_today)
+            myfile.close()
+        else:
+            print "no"
+
+        print lines
+
+        os.remove(output_csv)
+
+        with open(output_csv, "w") as myfile:
+            for l in lines:
+                myfile.write(l)
+            myfile.close()
