@@ -10,9 +10,11 @@ matrixconfig.read(os.path.join(os.getenv("HOME"), ".matrix"))
 SHARESPATH = matrixconfig.get("matrix", "sharespath") + "/"
 ACCOMSPATH = matrixconfig.get("matrix", "accompath")
 
-cfile = os.path.join(os.getenv("HOME"), "matrixstats.txt")
+output_configparser = os.path.join(os.getenv("HOME"), "matrixstats_config.txt")
+output_csv = os.path.join(os.getenv("HOME"), "matrixstats_csv.txt")
+
 config = ConfigParser.ConfigParser()
-config.read(cfile)
+config.read(output_configparser)
 
 now = datetime.datetime.now()
 
@@ -71,7 +73,7 @@ config.set("general", "totaltrophies", total_trophycount)
 if not config.has_section("users"):
     config.add_section("users")
     
-config.set("users", today+"-usernames", today_usernames)
+config.set("users", today+"-usernames", today_usernames.rstrip(" "))
 config.set("users", today+"-total", total_usercount)
 config.set("users", today+"-today", today_users)
 
@@ -81,5 +83,23 @@ if not config.has_section("trophies"):
 config.set("trophies", today+"-total", total_trophycount)
 config.set("trophies", today+"-today", todaystrophies)
 
-with open(cfile, 'wb') as configfile:
+with open(output_configparser, 'wb') as configfile:
     config.write(configfile)
+
+# -------- generate CSV ---------------
+
+text_header = "Date,Alltime Total Users,Alltime Total Trophies,Today Usernames,Today Total Users,Today New Users,Today Total Trophies,Today New Trophies"
+text_today = str("\n") + today + "," + str(len(final_total_users)) + "," + str(total_trophycount) + "," + str(today_usernames).rstrip(" ") + "," + str(total_usercount) + "," + str(today_users) + "," + str(total_trophycount) + "," + str(todaystrophies)
+
+lines = []
+
+if not os.path.exists(output_csv):
+    with open(output_csv, "a") as myfile:
+        myfile.write(text_header)
+        myfile.write(text_today)
+        myfile.close()
+else:
+    with open(output_csv, "a") as myfile:
+        myfile.write(text_today)
+        myfile.close()
+    
