@@ -104,12 +104,12 @@ else:
         last_line = lines[-1]
         
         if str(last_line.split(",")[0]) == str(now.date()):
-            print "foo"
             lines = lines[:-1]
             lines.append(text_today)
             myfile.close()
         else:
-            print "no"
+            lines.append(text_today)
+            myfile.close()
 
         print lines
 
