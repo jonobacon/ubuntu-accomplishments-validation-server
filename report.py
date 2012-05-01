@@ -111,8 +111,6 @@ else:
             lines.append(text_today)
             myfile.close()
 
-        print lines
-
         os.remove(output_csv)
 
         with open(output_csv, "w") as myfile:
