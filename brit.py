@@ -29,24 +29,19 @@ class Brit(object):
             if i.endswith(".asc"):
                 pass
             else:
-                matches.append(i)
+                p = "'" + i.replace("'", "'\\''") + "'"
+                itemconfig = ConfigParser.ConfigParser()
+                itemconfig.read(i)
+                
+                if itemconfig.has_option("trophy", "needs-signing"):
+                    if itemconfig.get("trophy", "needs-signing").lower().strip() == "true":
+                        matches.append(i)
+                    else:
+                        pass
+                else:
+                    pass
 
         final = list(set(matches) - set(signed))
-
-        #print final
-        # clear out links from queue
-
-        #for the_file in os.listdir(QUEUEPATH + "/"):
-        #    file_path = os.path.join(QUEUEPATH + "/", the_file)
-        #    try:
-        #        if os.path.isfile(file_path):
-        #            os.unlink(file_path)
-        #    except Exception, e:
-        #        print e
-        
-        # create the symbol links
-
-        #i = 1
 
         # populating the queue
 

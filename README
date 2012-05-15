@@ -1,3 +1,12 @@
 For setup instructions see:
 
   https://wiki.ubuntu.com/Accomplishments/Installing/ValidationServer
+
+Crontab setups:
+
+*/1 * * * * /home/jono/validation-service/cron_br.sh
+*/2 * * * * /home/jono/validation-service/cron_wo.sh
+*/2 * * * * /home/jono/validation-service/cron_sh.sh
+50 * * * * python /home/jono/validation-service/report.py
+55 * * * * python /home/jono/validation-service/report_generategraphs.py
+
