@@ -59,16 +59,16 @@ class Worker(object):
             itemconfig.read(self.item_path)
 
             try:
-                item_app = itemconfig.get("trophy", "application")
+                item_app = itemconfig.get("trophy", "application").replace(os.path.sep,'')
             except ConfigParser.NoOptionError, err:
                 self.delete_trophy()
             
             try:    
-                item_accom = itemconfig.get("trophy", "accomplishment")
+                item_accom = itemconfig.get("trophy", "accomplishment").replace(os.path.sep,'')
             except ConfigParser.NoOptionError, err:
                 self.delete_trophy()
                 
-            script = self.accom_path + "/scripts/" + item_app + "/" + item_accom + ".py"
+            script = os.path.join(self.accom_path, "scripts", item_app, item_accom + ".py")
             if os.path.exists(script):
                 self.run_script(script)
             else:
