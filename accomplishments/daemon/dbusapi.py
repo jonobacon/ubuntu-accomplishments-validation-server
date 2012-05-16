@@ -2,14 +2,13 @@ import os
 
 class Accomplishments():
     def __init__(self):
-        print "getting auth data"
+        pass
 
     def get_extra_information(self, app, info):
         trophypath = os.environ['ACCOMTROPHYPATH']
 
         a = os.path.split(trophypath)
         b = os.path.split(a[0])
-        print b[0]
 
         extrapath = b[0] + "/" + ".extrainformation/"
 

@@ -8,9 +8,7 @@ import subprocess
 import xdg.BaseDirectory
 
 class Worker(object):
-    def __init__(self, config_path):
-        print "Starting the worker..."
-                
+    def __init__(self, config_path):               
         self.dir_cache = os.path.join(xdg.BaseDirectory.xdg_cache_home, "accomplishments")
 
         if not os.path.exists(self.dir_cache):
@@ -39,7 +37,6 @@ class Worker(object):
 
         self.queue_path = config.get("matrix", "queuepath")
         self.accom_path = config.get("matrix", "accompath")
-        print "Processing items in: " + self.queue_path
 
         files = os.listdir(self.queue_path)
 
@@ -49,15 +46,12 @@ class Worker(object):
             # this grabs the real path; remember it is a symlink
             self.item_path = os.path.realpath(os.path.join(self.queue_path, f))
 
-            print "...processing: " + self.item_path
+            print "Processing: " + self.item_path
             
             self.current_user = self.item_path.split("/")[7].split(" ")[0]
             self.current_collection = self.item_path.split("/")[-2]
             self.current_accom = self.item_path.split("/")[-1].split(".")[0]
             
-            print self.current_user
-            print self.current_collection
-            print self.current_accom
 
             os.environ['ACCOMTROPHYPATH'] = self.item_path
 
@@ -66,20 +60,16 @@ class Worker(object):
 
             try:
                 item_app = itemconfig.get("trophy", "application")
-                print "found app"
             except ConfigParser.NoSectionError, err:
                 self.delete_trophy()
             
             try:    
                 item_accom = itemconfig.get("trophy", "accomplishment")
-                print "found accom"
             except ConfigParser.NoSectionError, err:
                 self.delete_trophy()
                 
             script = self.accom_path + "/scripts/" + item_app + "/" + item_accom + ".py"
-            print script
             if os.path.exists(script):
-                print "...running: " + script
                 self.run_script(script)
             else:
                 self.delete_trophy()
@@ -93,7 +83,6 @@ class Worker(object):
         sys.exit(0)
         
     def run_script(self, script):
-        print "...validating: " + script
         exitcode = subprocess.call(script)
         if exitcode == 0:
             print "...SUCCESS (0)"
@@ -110,15 +99,13 @@ class Worker(object):
             self.remove_symlink()
         else:
             self.current_status = "BIZARRO"
-            print "shouldn't happen"
+            print "...BIZARRO"
 
-        print "...exit code: " + str(exitcode)
         self.update_log()
         
         return
 
     def sign_trophy(self):
-        print "...signing the trophy!"
         command = []
         command.append("gpg")
         command.append("--yes")
@@ -126,25 +113,17 @@ class Worker(object):
         command.append(self.item_path + ".asc")
         command.append("--clearsign")
         command.append(self.item_path)
-        print command
 
         subprocess.Popen(command)
-        print "...signed!"
             
     def remove_symlink(self):
         linkadd = os.path.join(self.queue_path, self.symlink)
-        print "...removing symlink: " + linkadd
         if os.path.exists(linkadd):
             os.unlink(linkadd)
-        print "COMPLETED."
 
-    def update_log(self):
-        print "updating log"
-        
+    def update_log(self):        
         text_header = "Date,Time,User,Collection,Accomplishment,Status\n"
         text_today = str(self.date) + "," + str(self.time) + "," + str(self.current_user) + "," + str(self.current_collection) + "," + str(self.current_accom) + "," + str(self.current_status) + "\n"
-
-        print text_today
 
         lines = []
 
