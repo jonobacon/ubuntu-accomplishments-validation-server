@@ -60,12 +60,12 @@ class Worker(object):
 
             try:
                 item_app = itemconfig.get("trophy", "application")
-            except ConfigParser.NoSectionError, err:
+            except ConfigParser.NoOptionError, err:
                 self.delete_trophy()
             
             try:    
                 item_accom = itemconfig.get("trophy", "accomplishment")
-            except ConfigParser.NoSectionError, err:
+            except ConfigParser.NoOptionError, err:
                 self.delete_trophy()
                 
             script = self.accom_path + "/scripts/" + item_app + "/" + item_accom + ".py"
@@ -77,9 +77,11 @@ class Worker(object):
         sys.exit(0)
 
     def delete_trophy(self):
-        print "...invalid file, removing: " + self.item_path
+        print "...INVALID. Removing: " + self.item_path
+        self.current_status = "INVALID (" + self.item_path + ")"
         os.remove(self.item_path)
         self.remove_symlink()
+        self.update_log()
         sys.exit(0)
         
     def run_script(self, script):
