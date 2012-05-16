@@ -1,13 +1,29 @@
 #!/usr/bin/python
-import sys, os, subprocess
+import sys, os, subprocess, datetime
+from time import gmtime, strftime
 import ConfigParser
 from optparse import OptionParser
 import shutil
 import subprocess
+import xdg.BaseDirectory
 
 class Worker(object):
     def __init__(self, config_path):
         print "Starting the worker..."
+                
+        self.dir_cache = os.path.join(xdg.BaseDirectory.xdg_cache_home, "accomplishments")
+
+        if not os.path.exists(self.dir_cache):
+            os.makedirs(self.dir_cache)
+
+        if not os.path.exists(os.path.join(self.dir_cache, "logs")):
+            os.makedirs(os.path.join(self.dir_cache, "logs"))
+
+        self.output_csv = os.path.join(self.dir_cache, "logs", "worker_csv.csv")
+
+        now = datetime.datetime.now()
+        self.date = now.strftime("%Y-%m-%d")
+        self.time = now.strftime("%H:%M:%S")
 
         config = ConfigParser.ConfigParser()
         config.read(config_path + ".matrix")
@@ -15,6 +31,11 @@ class Worker(object):
         self.queue_path = None
         self.accom_path = None
         self.item_path = None
+                
+        self.current_user = ""
+        self.current_collection = ""
+        self.current_accom = ""
+        self.current_status = ""
 
         self.queue_path = config.get("matrix", "queuepath")
         self.accom_path = config.get("matrix", "accompath")
@@ -29,6 +50,14 @@ class Worker(object):
             self.item_path = os.path.realpath(os.path.join(self.queue_path, f))
 
             print "...processing: " + self.item_path
+            
+            self.current_user = self.item_path.split("/")[7].split(" ")[0]
+            self.current_collection = self.item_path.split("/")[-2]
+            self.current_accom = self.item_path.split("/")[-1].split(".")[0]
+            
+            print self.current_user
+            print self.current_collection
+            print self.current_accom
 
             os.environ['ACCOMTROPHYPATH'] = self.item_path
 
@@ -68,37 +97,40 @@ class Worker(object):
         exitcode = subprocess.call(script)
         if exitcode == 0:
             print "...SUCCESS (0)"
+            self.current_status = "SUCCESS"
             self.sign_trophy()
             self.remove_symlink()
         elif exitcode == 1:
             print "...FAILED (1)"
+            self.current_status = "FAILURE"
             self.remove_symlink()
         elif exitcode == 2:
             print "...ERROR (2)"
+            self.current_status = "ERROR"
             self.remove_symlink()
         else:
+            self.current_status = "BIZARRO"
             print "shouldn't happen"
 
         print "...exit code: " + str(exitcode)
-
+        self.update_log()
+        
         return
 
     def sign_trophy(self):
         print "...signing the trophy!"
+        command = []
+        command.append("gpg")
+        command.append("--yes")
+        command.append("--output")
+        command.append(self.item_path + ".asc")
+        command.append("--clearsign")
+        command.append(self.item_path)
+        print command
 
-	command = []
-	command.append("gpg")
-	command.append("--yes")
-	command.append("--output")
-	command.append(self.item_path + ".asc")
-	command.append("--clearsign")
-	command.append(self.item_path)
-	print command
-
-        #shutil.copy (self.item_path, self.item_path + ".sig")
-	subprocess.Popen(command)
+        subprocess.Popen(command)
         print "...signed!"
-        
+            
     def remove_symlink(self):
         linkadd = os.path.join(self.queue_path, self.symlink)
         print "...removing symlink: " + linkadd
@@ -106,6 +138,33 @@ class Worker(object):
             os.unlink(linkadd)
         print "COMPLETED."
 
+    def update_log(self):
+        print "updating log"
+        
+        text_header = "Date,Time,User,Collection,Accomplishment,Status\n"
+        text_today = str(self.date) + "," + str(self.time) + "," + str(self.current_user) + "," + str(self.current_collection) + "," + str(self.current_accom) + "," + str(self.current_status) + "\n"
+
+        print text_today
+
+        lines = []
+
+        if not os.path.exists(self.output_csv):
+            with open(self.output_csv, "a") as myfile:
+                myfile.write(text_header)
+                myfile.write(text_today)
+                myfile.close()
+        else:
+            with file(self.output_csv, "r") as myfile:
+                lines = myfile.readlines()
+                lines.append(text_today)
+                myfile.close()
+
+                os.remove(self.output_csv)
+
+                with open(self.output_csv, "w") as myfile:
+                    for l in lines:
+                        myfile.write(l)
+                    myfile.close()
 
 if __name__ == "__main__":
     parser = OptionParser()
