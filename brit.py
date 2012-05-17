@@ -1,6 +1,8 @@
 import os
 import ConfigParser
 from optparse import OptionParser
+import xdg.BaseDirectory, datetime
+from time import gmtime, strftime
 
 all = []
 signed = []
@@ -9,6 +11,25 @@ final = []
 
 class Brit(object):
     def __init__(self, config_path):
+        self.dir_cache = os.path.join(xdg.BaseDirectory.xdg_cache_home, "accomplishments")
+
+        if not os.path.exists(self.dir_cache):
+            os.makedirs(self.dir_cache)
+
+        if not os.path.exists(os.path.join(self.dir_cache, "logs")):
+            os.makedirs(os.path.join(self.dir_cache, "logs"))
+
+        self.output_csv = os.path.join(self.dir_cache, "logs", "brit_failures.csv")
+
+        now = datetime.datetime.now()
+        self.date = now.strftime("%Y-%m-%d")
+        self.time = now.strftime("%H:%M:%S")
+
+        self.current_user = ""
+        self.current_collection = ""
+        self.current_accom = ""
+        self.current_reason = ""
+
         config = ConfigParser.ConfigParser()
         config.read(config_path + ".matrix")
 
@@ -16,30 +37,53 @@ class Brit(object):
         self.QUEUEPATH = config.get("matrix", "queuepath")
 
         for r,d,f in os.walk(self.SHARESPATH):
-            for i in f:
-                if i.endswith(".trophy.asc"):
-                    res = os.path.join(r,i)
-                    signed.append(res[:-4])
-            for i in f:
-                if i.endswith(".trophy"):
-                    res = os.path.join(r,i)
-                    all.append(res)
+            if not r.endswith(".extrainformation"):
+                for i in f:
+                    if i.endswith(".trophy.asc"):
+                        res = os.path.join(r,i)
+                        signed.append(res[:-4])
+                    elif i.endswith(".trophy"):
+                        res = os.path.join(r,i)
+                        all.append(res)
 
         for i in all:
             if i.endswith(".asc"):
                 pass
             else:
+                self.current_user = i.split("/")[5].split(" ")[0]
+                self.current_collection = i.split("/")[-2]
+                self.current_accom = i.split("/")[-1].split(".")[0]
+
                 p = "'" + i.replace("'", "'\\''") + "'"
                 itemconfig = ConfigParser.ConfigParser()
-                itemconfig.read(i)
-                
-                if itemconfig.has_option("trophy", "needs-signing"):
-                    if itemconfig.get("trophy", "needs-signing").lower().strip() == "true":
-                        matches.append(i)
+
+                try:
+                    # check if this is a ConfigParser file
+                    itemconfig.read(i)
+                    
+                    # check if there is a [trophyy] section header
+                    if itemconfig.has_section("trophy"):
+                        if len(itemconfig.items("trophy")) == 0:
+                            self.current_reason = "No Options"
+                            self.update_log()
+                            os.remove(i)
+                        else:
+                            # check if the trophy has any options
+                            if itemconfig.has_option("trophy", "needs-signing"):
+                                if itemconfig.get("trophy", "needs-signing").lower().strip() == "true":
+                                    matches.append(i)
+                                else:
+                                    pass
+                            else:
+                                pass
                     else:
-                        pass
-                else:
-                    pass
+                        self.current_reason = "Missing Section: trophy"
+                        self.update_log()
+                        os.remove(i)
+                except ConfigParser.MissingSectionHeaderError, err:
+                    self.current_reason = "No section header."
+                    self.update_log()
+                    os.remove(i)
 
         final = list(set(matches) - set(signed))
 
@@ -86,7 +130,30 @@ class Brit(object):
             for link in broken:
                 # delete broken symlinks
                 os.unlink(link)
-            
+
+    def update_log(self):        
+        text_header = "Date,Time,User,Collection,Accomplishment,Reason\n"
+        text_today = str(self.date) + "," + str(self.time) + "," + str(self.current_user) + "," + str(self.current_collection) + "," + str(self.current_accom) + "," + str(self.current_reason) + "\n"
+
+        lines = []
+
+        if not os.path.exists(self.output_csv):
+            with open(self.output_csv, "a") as myfile:
+                myfile.write(text_header)
+                myfile.write(text_today)
+                myfile.close()
+        else:
+            with file(self.output_csv, "r") as myfile:
+                lines = myfile.readlines()
+                lines.append(text_today)
+                myfile.close()
+
+                os.remove(self.output_csv)
+
+                with open(self.output_csv, "w") as myfile:
+                    for l in lines:
+                        myfile.write(l)
+                    myfile.close()            
 
 if __name__ == "__main__":
     parser = OptionParser()

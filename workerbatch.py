@@ -17,7 +17,7 @@ class Worker(object):
         if not os.path.exists(os.path.join(self.dir_cache, "logs")):
             os.makedirs(os.path.join(self.dir_cache, "logs"))
 
-        self.output_csv = os.path.join(self.dir_cache, "logs", "worker_csv.csv")
+        self.output_csv = os.path.join(self.dir_cache, "logs", "worker_failures.csv")
 
         now = datetime.datetime.now()
         self.date = now.strftime("%Y-%m-%d")
@@ -33,7 +33,7 @@ class Worker(object):
         self.current_user = ""
         self.current_collection = ""
         self.current_accom = ""
-        self.current_status = ""
+        self.current_reason = ""
 
         self.queue_path = config.get("matrix", "queuepath")
         self.accom_path = config.get("matrix", "accompath")
@@ -51,7 +51,6 @@ class Worker(object):
             self.current_user = self.item_path.split("/")[7].split(" ")[0]
             self.current_collection = self.item_path.split("/")[-2]
             self.current_accom = self.item_path.split("/")[-1].split(".")[0]
-            
 
             os.environ['ACCOMTROPHYPATH'] = self.item_path
 
@@ -60,50 +59,47 @@ class Worker(object):
 
             try:
                 item_app = itemconfig.get("trophy", "id").split("/")[0].replace(os.path.sep,'')
-            except ConfigParser.NoOptionError, err:
-                self.delete_trophy()
-            
-            try:    
                 item_accom = itemconfig.get("trophy", "id").split("/")[1].replace(os.path.sep,'')
             except ConfigParser.NoOptionError, err:
+                self.current_reason = "Missing Trophy Option: id"
+                self.update_log()
                 self.delete_trophy()
-                
+
             script = os.path.join(self.accom_path, "scripts", item_app, item_accom + ".py")
+
             if os.path.exists(script):
                 self.run_script(script)
             else:
+                self.current_reason = "Script does not exist (" + str(script) + " )"
+                self.update_log()
                 self.delete_trophy()
             
         sys.exit(0)
 
     def delete_trophy(self):
         print "...INVALID. Removing: " + self.item_path
-        self.current_status = "INVALID (" + self.item_path + ")"
         os.remove(self.item_path)
         self.remove_symlink()
-        self.update_log()
         sys.exit(0)
         
     def run_script(self, script):
         exitcode = subprocess.call(script)
         if exitcode == 0:
             print "...SUCCESS (0)"
-            self.current_status = "SUCCESS"
             self.sign_trophy()
             self.remove_symlink()
         elif exitcode == 1:
             print "...FAILED (1)"
-            self.current_status = "FAILURE"
             self.remove_symlink()
         elif exitcode == 2:
             print "...ERROR (2)"
-            self.current_status = "ERROR"
+            #self.current_reason = "ERROR"
             self.remove_symlink()
         else:
-            self.current_status = "BIZARRO"
+            #self.current_reason = "BIZARRO"
             print "...BIZARRO"
 
-        self.update_log()
+        #self.update_log()
         
         return
 
@@ -124,8 +120,8 @@ class Worker(object):
             os.unlink(linkadd)
 
     def update_log(self):        
-        text_header = "Date,Time,User,Collection,Accomplishment,Status\n"
-        text_today = str(self.date) + "," + str(self.time) + "," + str(self.current_user) + "," + str(self.current_collection) + "," + str(self.current_accom) + "," + str(self.current_status) + "\n"
+        text_header = "Date,Time,User,Collection,Accomplishment,Reason\n"
+        text_today = str(self.date) + "," + str(self.time) + "," + str(self.current_user) + "," + str(self.current_collection) + "," + str(self.current_accom) + "," + str(self.current_reason) + "\n"
 
         lines = []
 
