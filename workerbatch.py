@@ -65,7 +65,9 @@ class Worker(object):
                 self.update_log()
                 self.delete_trophy()
 
-            script = os.path.join(self.accom_path, "scripts", item_app, item_accom + ".py")
+            print self.get_script(itemconfig.get("trophy", "id"))
+            #script = os.path.join(self.accom_path, "scripts", item_app, item_accom + ".py")
+            script = self.get_script(itemconfig.get("trophy", "id"))
 
             if os.path.exists(script):
                 self.run_script(script)
@@ -75,6 +77,21 @@ class Worker(object):
                 self.delete_trophy()
             
         sys.exit(0)
+
+    def get_script(self, accomid):
+        collection = accomid.split("/")[0]
+        accomfile = accomid.split("/")[1]        
+        scriptsdir = os.path.join(self.accom_path, "scripts", collection)
+
+        scriptfile = ""
+        testfile = ""
+        scriptname = (accomfile + ".py")
+
+        for root, dirs, names in os.walk(scriptsdir):
+            if scriptname in names:
+                scriptfile = os.path.join(root, scriptname)
+        
+        return scriptfile
 
     def delete_trophy(self):
         print "...INVALID. Removing: " + self.item_path
@@ -93,17 +110,15 @@ class Worker(object):
             self.remove_symlink()
         elif exitcode == 2:
             print "...ERROR (2)"
-            #self.current_reason = "ERROR"
             self.remove_symlink()
         else:
-            #self.current_reason = "BIZARRO"
             print "...BIZARRO"
-
-        #self.update_log()
         
         return
 
     def sign_trophy(self):
+        print "signing trophy"
+        print self.item_path
         command = []
         command.append("gpg")
         command.append("--yes")
