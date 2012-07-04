@@ -47,7 +47,7 @@ class Worker(object):
             self.item_path = os.path.realpath(os.path.join(self.queue_path, f))
 
             print "Processing: " + self.item_path
-            
+            print self.item_path
             self.current_user = self.item_path.split("/")[7].split(" ")[0]
             self.current_collection = self.item_path.split("/")[-2]
             self.current_accom = self.item_path.split("/")[-1].split(".")[0]
@@ -69,6 +69,7 @@ class Worker(object):
             #script = os.path.join(self.accom_path, "scripts", item_app, item_accom + ".py")
             script = self.get_script(itemconfig.get("trophy", "id"))
 
+            print "Script: " + script
             if os.path.exists(script):
                 self.run_script(script)
             else:
@@ -111,6 +112,7 @@ class Worker(object):
         elif exitcode == 2:
             print "...ERROR (2)"
             self.remove_symlink()
+            self.delete_trophy()
         else:
             print "...BIZARRO"
         

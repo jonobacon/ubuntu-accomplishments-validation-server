@@ -1,4 +1,4 @@
-import os
+import os, subprocess
 import ConfigParser
 from optparse import OptionParser
 import xdg.BaseDirectory, datetime
@@ -47,13 +47,17 @@ class Brit(object):
                         all.append(res)
 
         for i in all:
+            self.failurecodes = []
             if i.endswith(".asc"):
                 pass
             else:
+                self.current_date = self.date + " " + self.time
                 self.current_user = i.split("/")[5].split(" ")[0]
                 self.current_collection = i.split("/")[-2]
                 self.current_accom = i.split("/")[-1].split(".")[0]
-
+                self.current_accom_id = self.current_collection + "/" + self.current_accom
+                self.current_share_id = i.split(")")[-2].split("(")[-1].split(" ")[-1]
+                                
                 p = "'" + i.replace("'", "'\\''") + "'"
                 itemconfig = ConfigParser.ConfigParser()
 
@@ -65,8 +69,8 @@ class Brit(object):
                     if itemconfig.has_section("trophy"):
                         if len(itemconfig.items("trophy")) == 0:
                             self.current_reason = "No Options"
+                            self.failurecodes.append(102)
                             self.update_log()
-                            os.remove(i)
                         else:
                             # check if the trophy has any options
                             if itemconfig.has_option("trophy", "needs-signing"):
@@ -77,13 +81,26 @@ class Brit(object):
                             else:
                                 pass
                     else:
-                        self.current_reason = "Missing Section: trophy"
+                        self.current_reason = "Missing Section: trophy"                        
+                        self.failurecodes.append(101)
                         self.update_log()
-                        os.remove(i)
                 except ConfigParser.MissingSectionHeaderError, err:
                     self.current_reason = "No section header."
-                    self.update_log()
-                    os.remove(i)
+                    self.failurecodes.append(100)
+                    self.update_log()                    
+        
+            if len(self.failurecodes) > 0:
+                failurestring = ""
+                
+                for f in self.failurecodes:
+                    failurestring = failurestring + str(f) + ","
+                
+                failurestring = failurestring.rstrip(",")
+                
+                failurecommand = "python /var/www/accomplishmentsadmin/manage.py addfailure" + " '" + self.current_date + "' " + self.current_share_id + " " + self.current_user + " " + self.current_accom_id + " " + failurestring
+                print failurecommand
+                active_proc = subprocess.Popen(["python", "/var/www/accomplishmentsadmin/manage.py", "addfailure", self.current_date, self.current_share_id, self.current_user, self.current_accom_id, failurestring], 0, None, subprocess.PIPE, subprocess.PIPE, None)
+                os.remove(i)
 
         final = list(set(matches) - set(signed))
 
