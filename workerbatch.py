@@ -42,15 +42,18 @@ class Worker(object):
 
         for f in files:
             self.symlink = f
+            self.failurecodes = []
 
             # this grabs the real path; remember it is a symlink
             self.item_path = os.path.realpath(os.path.join(self.queue_path, f))
 
             print "Processing: " + self.item_path
-            print self.item_path
+            self.current_date = self.date + " " + self.time            
             self.current_user = self.item_path.split("/")[7].split(" ")[0]
             self.current_collection = self.item_path.split("/")[-2]
             self.current_accom = self.item_path.split("/")[-1].split(".")[0]
+            self.current_accom_id = self.current_collection + "/" + self.current_accom
+            self.current_share_id = self.item_path.split(")")[-2].split("(")[-1].split(" ")[-1]
 
             os.environ['ACCOMTROPHYPATH'] = self.item_path
 
@@ -62,21 +65,41 @@ class Worker(object):
                 item_accom = itemconfig.get("trophy", "id").split("/")[1].replace(os.path.sep,'')
             except ConfigParser.NoOptionError, err:
                 self.current_reason = "Missing Trophy Option: id"
+                self.failurecodes.append(200)
                 self.update_log()
-                self.delete_trophy()
+                #self.delete_trophy()
 
-            print self.get_script(itemconfig.get("trophy", "id"))
+            #print self.get_script(itemconfig.get("trophy", "id"))
             #script = os.path.join(self.accom_path, "scripts", item_app, item_accom + ".py")
-            script = self.get_script(itemconfig.get("trophy", "id"))
+
+            script = ""
+            
+            try:
+                script = self.get_script(itemconfig.get("trophy", "id"))
+            except ConfigParser.NoOptionError, err:
+                pass
 
             print "Script: " + script
             if os.path.exists(script):
                 self.run_script(script)
             else:
                 self.current_reason = "Script does not exist (" + str(script) + " )"
+                self.failurecodes.append(201)
                 self.update_log()
-                self.delete_trophy()
-            
+                #self.delete_trophy()
+
+            if len(self.failurecodes) > 0:
+                failurestring = ""
+                
+                for f in self.failurecodes:
+                    failurestring = failurestring + str(f) + ","
+                
+                failurestring = failurestring.rstrip(",")
+                
+                failurecommand = "python /var/www/accomplishmentsadmin/manage.py addfailure" + " '" + self.current_date + "' " + self.current_share_id + " " + self.current_user + " " + self.current_accom_id + " " + failurestring
+                print failurecommand
+                active_proc = subprocess.Popen(["python", "/var/www/accomplishmentsadmin/manage.py", "addfailure", self.current_date, self.current_share_id, self.current_user, self.current_accom_id, failurestring], 0, None, subprocess.PIPE, subprocess.PIPE, None)
+                self.delete_trophy()            
         sys.exit(0)
 
     def get_script(self, accomid):
