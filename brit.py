@@ -10,8 +10,9 @@ matches = []
 final = []
 
 class Brit(object):
-    def __init__(self, config_path):
+    def __init__(self):
         self.dir_cache = os.path.join(xdg.BaseDirectory.xdg_cache_home, "accomplishments")
+        self.dir_config = os.path.join(xdg.BaseDirectory.xdg_config_home, "accomplishments")
 
         if not os.path.exists(self.dir_cache):
             os.makedirs(self.dir_cache)
@@ -31,7 +32,7 @@ class Brit(object):
         self.current_reason = ""
 
         config = ConfigParser.ConfigParser()
-        config.read(config_path + ".matrix")
+        config.read(os.path.join(self.dir_config, ".matrix"))
 
         self.SHARESPATH = config.get("matrix", "sharespath")
         self.QUEUEPATH = config.get("matrix", "queuepath")
@@ -173,8 +174,4 @@ class Brit(object):
                     myfile.close()            
 
 if __name__ == "__main__":
-    parser = OptionParser()
-    parser.set_defaults(suppress_notifications=False)
-    parser.add_option("--config-path", dest="config_path", default=os.getenv("HOME") + "/")
-    options, args = parser.parse_args()
-    foo = Brit(config_path=options.config_path)
+    foo = Brit()
