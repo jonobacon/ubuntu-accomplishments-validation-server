@@ -2,4 +2,4 @@
 accompath: /home/foo/accomplishments
 sharespath: /home/foo/Ubuntu One/Shared With Me
 queuepath: /home/foo/queue
-
+adminwebpath: /var/www/accomplishmentsadmin

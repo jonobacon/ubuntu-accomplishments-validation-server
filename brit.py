@@ -36,7 +36,8 @@ class Brit(object):
 
         self.SHARESPATH = config.get("matrix", "sharespath")
         self.QUEUEPATH = config.get("matrix", "queuepath")
-
+        self.ADMINWEBPATH = config.get("matrix", "adminwebpath")
+        
         for r,d,f in os.walk(self.SHARESPATH):
             if not r.endswith(".extrainformation"):
                 for i in f:
@@ -71,7 +72,6 @@ class Brit(object):
                         if len(itemconfig.items("trophy")) == 0:
                             self.current_reason = "No Options"
                             self.failurecodes.append(102)
-                            self.update_log()
                         else:
                             # check if the trophy has any options
                             if itemconfig.has_option("trophy", "needs-signing"):
@@ -84,11 +84,9 @@ class Brit(object):
                     else:
                         self.current_reason = "Missing Section: trophy"                        
                         self.failurecodes.append(101)
-                        self.update_log()
                 except ConfigParser.MissingSectionHeaderError, err:
                     self.current_reason = "No section header."
                     self.failurecodes.append(100)
-                    self.update_log()                    
         
             if len(self.failurecodes) > 0:
                 failurestring = ""
@@ -98,9 +96,14 @@ class Brit(object):
                 
                 failurestring = failurestring.rstrip(",")
                 
-                failurecommand = "python /var/www/accomplishmentsadmin/manage.py addfailure" + " '" + self.current_date + "' " + self.current_share_id + " " + self.current_user + " " + self.current_accom_id + " " + failurestring
-                print failurecommand
-                active_proc = subprocess.Popen(["python", "/var/www/accomplishmentsadmin/manage.py", "addfailure", self.current_date, self.current_share_id, self.current_user, self.current_accom_id, failurestring], 0, None, subprocess.PIPE, subprocess.PIPE, None)
+                addfailurepath = os.path.join(self.ADMINWEBPATH, "manage.py")
+                failurecommand = "python " +  addfailurepath + " addfailure" + " '" + self.current_date + "' " + self.current_share_id + " " + self.current_user + " " + self.current_accom_id + " " + failurestring
+                
+                try:
+                    active_proc = subprocess.Popen(["python", addfailurepath, "addfailure", self.current_date, self.current_share_id, self.current_user, self.current_accom_id, failurestring], 0, None, subprocess.PIPE, subprocess.PIPE, None)
+                except:
+                    print "Problem running failure logging."
+                
                 os.remove(i)
 
         final = list(set(matches) - set(signed))
@@ -148,30 +151,6 @@ class Brit(object):
             for link in broken:
                 # delete broken symlinks
                 os.unlink(link)
-
-    def update_log(self):        
-        text_header = "Date,Time,User,Collection,Accomplishment,Reason\n"
-        text_today = str(self.date) + "," + str(self.time) + "," + str(self.current_user) + "," + str(self.current_collection) + "," + str(self.current_accom) + "," + str(self.current_reason) + "\n"
-
-        lines = []
-
-        if not os.path.exists(self.output_csv):
-            with open(self.output_csv, "a") as myfile:
-                myfile.write(text_header)
-                myfile.write(text_today)
-                myfile.close()
-        else:
-            with file(self.output_csv, "r") as myfile:
-                lines = myfile.readlines()
-                lines.append(text_today)
-                myfile.close()
-
-                os.remove(self.output_csv)
-
-                with open(self.output_csv, "w") as myfile:
-                    for l in lines:
-                        myfile.write(l)
-                    myfile.close()            
 
 if __name__ == "__main__":
     foo = Brit()
