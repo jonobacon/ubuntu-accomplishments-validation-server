@@ -69,7 +69,6 @@ class Worker(object):
             except ConfigParser.NoOptionError, err:
                 self.current_reason = "Missing Trophy Option: id"
                 self.failurecodes.append(200)
-                self.update_log()
 
             script = ""
             
@@ -84,7 +83,6 @@ class Worker(object):
             else:
                 self.current_reason = "Script does not exist (" + str(script) + " )"
                 self.failurecodes.append(201)
-                self.update_log()
 
             if len(self.failurecodes) > 0:
                 failurestring = ""
@@ -95,8 +93,12 @@ class Worker(object):
                 failurestring = failurestring.rstrip(",")
                 addfailurepath = os.path.join(self.adminweb_path, "manage.py")
                 
-                failurecommand = "python " + addfailurepath + " addfailure" + " '" + self.current_date + "' " + self.current_share_id + " " + self.current_user + " " + self.current_accom_id + " " + failurestring
-                active_proc = subprocess.Popen(["python", addfailurepath, "addfailure", self.current_date, self.current_share_id, self.current_user, self.current_accom_id, failurestring], 0, None, subprocess.PIPE, subprocess.PIPE, None)
+                try:
+                    failurecommand = "python " + addfailurepath + " addfailure" + " '" + self.current_date + "' " + self.current_share_id + " " + self.current_user + " " + self.current_accom_id + " " + failurestring
+                    active_proc = subprocess.Popen(["python", addfailurepath, "addfailure", self.current_date, self.current_share_id, self.current_user, self.current_accom_id, failurestring], 0, None, subprocess.PIPE, subprocess.PIPE, None)
+                except:
+                    print "Problem running failure logging."
+                
                 self.delete_trophy()            
         sys.exit(0)
 
@@ -156,30 +158,6 @@ class Worker(object):
         linkadd = os.path.join(self.queue_path, self.symlink)
         if os.path.exists(linkadd):
             os.unlink(linkadd)
-
-    def update_log(self):        
-        text_header = "Date,Time,User,Collection,Accomplishment,Reason\n"
-        text_today = str(self.date) + "," + str(self.time) + "," + str(self.current_user) + "," + str(self.current_collection) + "," + str(self.current_accom) + "," + str(self.current_reason) + "\n"
-
-        lines = []
-
-        if not os.path.exists(self.output_csv):
-            with open(self.output_csv, "a") as myfile:
-                myfile.write(text_header)
-                myfile.write(text_today)
-                myfile.close()
-        else:
-            with file(self.output_csv, "r") as myfile:
-                lines = myfile.readlines()
-                lines.append(text_today)
-                myfile.close()
-
-                os.remove(self.output_csv)
-
-                with open(self.output_csv, "w") as myfile:
-                    for l in lines:
-                        myfile.write(l)
-                    myfile.close()
 
 if __name__ == "__main__":
     parser = OptionParser()
