@@ -10,6 +10,7 @@ import xdg.BaseDirectory
 class Worker(object):
     def __init__(self, config_path):               
         self.dir_cache = os.path.join(xdg.BaseDirectory.xdg_cache_home, "accomplishments")
+        self.dir_config = os.path.join(xdg.BaseDirectory.xdg_config_home, "accomplishments")
 
         if not os.path.exists(self.dir_cache):
             os.makedirs(self.dir_cache)
@@ -24,11 +25,12 @@ class Worker(object):
         self.time = now.strftime("%H:%M:%S")
 
         config = ConfigParser.ConfigParser()
-        config.read(config_path + ".matrix")
+        config.read(os.path.join(self.dir_config, ".matrix"))
 
         self.queue_path = None
         self.accom_path = None
         self.item_path = None
+        self.adminweb_path = None
                 
         self.current_user = ""
         self.current_collection = ""
@@ -37,6 +39,7 @@ class Worker(object):
 
         self.queue_path = config.get("matrix", "queuepath")
         self.accom_path = config.get("matrix", "accompath")
+        self.adminweb_path = config.get("matrix", "adminwebpath")
 
         files = os.listdir(self.queue_path)
 
@@ -67,10 +70,6 @@ class Worker(object):
                 self.current_reason = "Missing Trophy Option: id"
                 self.failurecodes.append(200)
                 self.update_log()
-                #self.delete_trophy()
-
-            #print self.get_script(itemconfig.get("trophy", "id"))
-            #script = os.path.join(self.accom_path, "scripts", item_app, item_accom + ".py")
 
             script = ""
             
@@ -86,7 +85,6 @@ class Worker(object):
                 self.current_reason = "Script does not exist (" + str(script) + " )"
                 self.failurecodes.append(201)
                 self.update_log()
-                #self.delete_trophy()
 
             if len(self.failurecodes) > 0:
                 failurestring = ""
@@ -95,10 +93,10 @@ class Worker(object):
                     failurestring = failurestring + str(f) + ","
                 
                 failurestring = failurestring.rstrip(",")
+                addfailurepath = os.path.join(self.adminweb_path, "manage.py")
                 
-                failurecommand = "python /var/www/accomplishmentsadmin/manage.py addfailure" + " '" + self.current_date + "' " + self.current_share_id + " " + self.current_user + " " + self.current_accom_id + " " + failurestring
-                print failurecommand
-                active_proc = subprocess.Popen(["python", "/var/www/accomplishmentsadmin/manage.py", "addfailure", self.current_date, self.current_share_id, self.current_user, self.current_accom_id, failurestring], 0, None, subprocess.PIPE, subprocess.PIPE, None)
+                failurecommand = "python " + addfailurepath + " addfailure" + " '" + self.current_date + "' " + self.current_share_id + " " + self.current_user + " " + self.current_accom_id + " " + failurestring
+                active_proc = subprocess.Popen(["python", addfailurepath, "addfailure", self.current_date, self.current_share_id, self.current_user, self.current_accom_id, failurestring], 0, None, subprocess.PIPE, subprocess.PIPE, None)
                 self.delete_trophy()            
         sys.exit(0)
 
