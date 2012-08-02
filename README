@@ -1,12 +1,89 @@
-For setup instructions see:
+Ubuntu Accomplishments Validation Server
+----------------------------------------
 
-  https://wiki.ubuntu.com/Accomplishments/Installing/ValidationServer
+This archive provides the validation server component of the Ubuntu
+Accomplishments system. This README explains how to get everything set up.
 
-Crontab setups:
+If you have any further queries, contact jono@ubuntu.com
 
-*/1 * * * * /home/jono/validation-service/cron_br.sh
-*/2 * * * * /home/jono/validation-service/cron_wo.sh
-*/2 * * * * /home/jono/validation-service/cron_sh.sh
-50 * * * * python /home/jono/validation-service/report.py
-55 * * * * python /home/jono/validation-service/report_generategraphs.py
+> Approach <
 
+Ubuntu Accomplishments works by the client detecting if an accomplishment
+has been detected and then creating a .trophy file in the user's Ubuntu
+One share. This is synced to the validation server where we validate that
+it wasn't faked and then GPG sign the file and put it back in the share.
+This is then synced back to the client where it is displayed to the user.
+
+The validation server works by having a series of scripts that are
+regularly run as cron jobs. These are the scripts:
+
+ * brit.py - this script scans for any .trophy files that have not yet
+   been signed. When a file is detected it is added to the queue (as a
+   symlink).
+ * workerbatch.py - this script reads in all the files in the queue (that
+   brit.py queued up) and then processed them to check that they are
+   valid. If they are valid they are signed, if not they are deleted.
+ * sharecheck.py - this script checks for and accepts share requests (these
+   requests are from new Ubuntu Accomplishments users).
+
+One file you may notice too is process-sharecheck which applies a little
+DBUS magic to get around an issue with Ubuntu One Headless.
+
+> Requirements <
+
+Currently the following is required:
+
+ * Ubuntu 12.04 LTS
+
+> Step 1: Ubuntu One Headless <
+
+An Ubuntu One Headless setup is required. Details of how to set this up
+are at https://wiki.ubuntu.com/UbuntuOne/Headless
+
+> Step 2: Install the Required Packages <
+
+Set up the Ubuntu Accomplishments releases PPA and install
+the community accomplishments package:
+
+  sudo add-apt-repository ppa:ubuntu-accomplishments/releases
+  sudo apt-get update
+  sudo apt-get install ubuntu-community-accomplishments accomplishments-battery
+
+> Step 3: Set up the validation server <
+
+Create the user account where the installation will run.
+
+Install the bzr branch:
+
+  bzr branch lp:ubuntu-accomplishments-validation-server
+
+Now create the directories we will use for the installation:
+
+  mkdir queue
+  mkdir accomplishments
+
+Now create the configuration:
+
+  mkdir ~/.config/accomplishments
+  cp .matrixexample ~/.config/accomplishments/.matrix
+
+Now edit ~/.config/accomplishments/.matrix and set the fields:
+
+ * accompath - leave this set to /usr/share/accomplishments
+ * sharespath - set this to the location of the Ubuntu One
+ 'Shared With Me' dir.
+ * queuepath - set this to the ~/queue dir.
+
+If you have set up the admin web interface, set 'adminwebpath' to the
+web root of that project.
+
+Now set up the crontab for the user:
+
+  crontab -e
+
+Add the following:
+
+  */1 * * * * /home/jono/validation-service/cron_br.sh
+  */2 * * * * /home/jono/validation-service/cron_wo.sh
+  */2 * * * * /home/jono/validation-service/process-sharecheck
+  

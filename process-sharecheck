@@ -13,4 +13,4 @@ fi
 export DBUS_SESSION_BUS_ADDRESS
 
 
-python /home/jono/validation-service/sharecheck.py
+python ~/validation-service/sharecheck.py

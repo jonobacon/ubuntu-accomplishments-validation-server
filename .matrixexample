@@ -1,5 +1,5 @@
 [matrix]
-accompath: /home/foo/accomplishments
+accompath: /usr/share/accomplishments
 sharespath: /home/foo/Ubuntu One/Shared With Me
 queuepath: /home/foo/queue
 adminwebpath: /var/www/accomplishmentsadmin
