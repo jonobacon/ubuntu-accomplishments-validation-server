@@ -87,3 +87,6 @@ Add the following:
   */2 * * * * /home/jono/validation-service/cron_wo.sh
   */2 * * * * /home/jono/validation-service/process-sharecheck
   
+> Step 4: Install the GPG Key <
+
+Contact jono@ubuntu.com regarding this.
